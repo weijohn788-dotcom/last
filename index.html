@@ -257,28 +257,50 @@
         let isUIVisible = true;
 
         // 预加载所有图片
+        // 替换原本的 preloadPhotos 函数
         function preloadPhotos() {
-            if (photoList.length > 0) {
-                loadingMsg.style.display = 'block';
-            }
+            const statusEl = document.getElementById('loading-msg');
+            statusEl.style.display = 'block';
+            statusEl.style.color = 'yellow';
+            
             let loadedCount = 0;
+            let errorCount = 0;
+            
+            // 调试信息：显示总共配置了多少张
+            console.log(`代码配置了 ${photoList.length} 张照片`);
+
             photoList.forEach(src => {
                 const img = new Image();
                 img.src = src;
+                
                 img.onload = () => {
                     loadedImages.push(img);
                     loadedCount++;
-                    if (loadedCount === photoList.length) {
-                        loadingMsg.style.display = 'none';
-                        console.log("所有照片加载完毕");
+                    // 实时更新屏幕文字
+                    statusEl.innerText = `正在加载: ${loadedCount}/${photoList.length} (失败: ${errorCount})`;
+                    
+                    if (loadedCount + errorCount === photoList.length) {
+                        setTimeout(() => {
+                            statusEl.innerText = `加载完成！成功 ${loadedCount} 张，失败 ${errorCount} 张`;
+                            statusEl.style.color = '#00ff00';
+                            // 3秒后隐藏提示
+                            setTimeout(() => statusEl.style.display = 'none', 3000);
+                        }, 500);
                     }
                 };
+                
                 img.onerror = () => {
-                    console.log("图片加载失败: " + src);
-                    loadedCount++; // 即使失败也继续
-                    if (loadedCount === photoList.length) loadingMsg.style.display = 'none';
+                    errorCount++;
+                    console.error("加载失败 (请检查文件名大小写): " + src);
+                    statusEl.innerText = `正在加载: ${loadedCount}/${photoList.length} (失败: ${errorCount})`;
+                    
+                    if (loadedCount + errorCount === photoList.length) {
+                        statusEl.innerText = `加载结束。⚠️ 失败 ${errorCount} 张，请检查文件名！`;
+                        statusEl.style.color = '#ff0000';
+                    }
                 }
             });
+        }
         }
 
         toggleBtn.addEventListener('click', () => {
@@ -594,4 +616,5 @@
         init();
     </script>
 </body>
+
 </html>
