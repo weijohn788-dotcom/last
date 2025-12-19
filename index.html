@@ -1,0 +1,597 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merry Christmas</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1e29 0%, #000000 100%);
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+        }
+
+        /* UI 面板 */
+        #ui-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.15);
+            z-index: 100;
+            width: 260px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            transition: opacity 0.3s;
+        }
+
+        #toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 101;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            #toggle-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #bbb;
+            margin-bottom: 4px;
+        }
+
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #ff3333;
+            height: 4px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 5px;
+        }
+
+        input[type=text] {
+            flex: 1;
+            padding: 6px;
+            border-radius: 4px;
+            border: none;
+            outline: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 13px;
+        }
+
+        button.action-btn {
+            padding: 6px 12px;
+            background: #cc0000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+            button.action-btn:hover {
+                background: #ff0000;
+            }
+
+        #loading-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff00;
+            font-size: 14px;
+            pointer-events: none;
+            display: none;
+        }
+
+        #text-container {
+            position: absolute;
+            bottom: 10%;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+        }
+
+        #scrolling-text {
+            white-space: nowrap;
+            font-weight: bold;
+            color: #ff2222;
+            text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 20px #ff0000;
+            font-family: 'Times New Roman', serif;
+            position: absolute;
+            will-change: transform;
+        }
+
+        #egg-hint {
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
+            pointer-events: none;
+            text-align: right;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="toggle-btn" title="隐藏/显示控制台">👁️</button>
+    <div id="loading-msg">正在加载专属惊喜...</div>
+
+    <div id="ui-panel">
+        <div style="font-size: 15px; font-weight: bold; margin-bottom: 15px; color: #ff3333; border-bottom:1px solid #555; padding-bottom:5px;">
+            ❄️ 圣诞惊喜
+        </div>
+
+        <div class="control-group">
+            <label>🎄 树的密度:</label>
+            <input type="range" id="particleSlider" min="500" max="4000" step="100" value="2000">
+        </div>
+        <div class="control-group">
+            <label>🚀 滚动速度:</label>
+            <input type="range" id="speedSlider" min="0" max="20" step="1" value="2">
+        </div>
+        <div class="control-group">
+            <label>📝 发送祝福 (输入彩蛋词):</label>
+            <div class="input-row">
+                <input type="text" id="msgInput" value="MERRY CHRISTMAS">
+                <button class="action-btn" onclick="updateText()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="text-container">
+        <div id="scrolling-text">MERRY CHRISTMAS</div>
+    </div>
+
+    <div id="egg-hint">
+        "love"/"爱" -> 爱心雨<br>
+        "miss"/"想你" -> 星雨<br>
+        "魏名扬" -> 专属时刻
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // ==========================================
+        //  【重要】配置区域：请在这里修改
+        // ==========================================
+
+        const TARGET_NAME = "魏名扬"; // 触发名字
+
+        // 请把你在 photos 文件夹里的照片名字填在这里
+        // 格式："photos/文件名.jpg"
+        const photoList = [
+            "18s/1.png",
+            "18s/2.jpg",
+            "18s/3.jpg",
+            "18s/4.jpg",
+            "18s/6.jpg",
+            "18s/7.jpg",
+            "18s/8.jpg",
+            "18s/9.jpg",
+            "18s/10.jpg",
+            "18s/11.jpg",
+            "18s/12.jpg",
+            "18s/13.jpg",
+            "18s/14.jpg",
+            "18s/15.jpg",
+            "18s/16.jpg",
+            "18s/17.jpg",
+            "18s/18.jpg",
+            "18s/19.jpg",
+            "18s/21.jpg",
+            "18s/22.jpg",
+            "18s/IMG_20240213_135912.jpg",
+            "18s/IMG_20240521_154317.jpg",
+            "18s/IMG_20241222_213848.jpg",
+            "18s/IMG_20241222_213957.jpg",
+            "18s/IMG_20250101_121453.jpg",
+            "18s/IMG_20250101_123726.jpg",
+            // 如果你有更多，按格式继续加...
+            // "photos/4.jpg",
+            // "photos/5.png"
+        ];
+
+        const MAX_PHOTOS = 99; // 同屏最大照片数
+        // ==========================================
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const uiPanel = document.getElementById('ui-panel');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const loadingMsg = document.getElementById('loading-msg');
+
+        let width, height;
+        let focalLength = 500;
+        let zoom = 1.0;
+        let particleCount = 2000;
+        let particles = [];
+
+        // 资源与粒子
+        let loadedImages = []; // 预加载后的图片对象
+        let activePhotoParticles = [];
+        let hearts = [];
+        let yellowStars = [];
+
+        let heartSpawnEndTime = 0;
+        let starSpawnEndTime = 0;
+        let angleY = 0;
+        let targetAngleY = 0;
+        let isDragging = false;
+        let lastMouseX = 0;
+        let textX = 0; let textSpeed = 2; let textSize = 60;
+        let isUIVisible = true;
+
+        // 预加载所有图片
+        function preloadPhotos() {
+            if (photoList.length > 0) {
+                loadingMsg.style.display = 'block';
+            }
+            let loadedCount = 0;
+            photoList.forEach(src => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => {
+                    loadedImages.push(img);
+                    loadedCount++;
+                    if (loadedCount === photoList.length) {
+                        loadingMsg.style.display = 'none';
+                        console.log("所有照片加载完毕");
+                    }
+                };
+                img.onerror = () => {
+                    console.log("图片加载失败: " + src);
+                    loadedCount++; // 即使失败也继续
+                    if (loadedCount === photoList.length) loadingMsg.style.display = 'none';
+                }
+            });
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            isUIVisible = !isUIVisible;
+            uiPanel.style.opacity = isUIVisible ? '1' : '0';
+            uiPanel.style.pointerEvents = isUIVisible ? 'auto' : 'none';
+            toggleBtn.innerText = isUIVisible ? '👁️' : '⚙️';
+        });
+
+        function init() {
+            resize();
+            window.addEventListener('resize', resize);
+            textX = window.innerWidth;
+            updateTextStyle();
+            preloadPhotos(); // 启动时预加载图片
+
+            document.getElementById('particleSlider').addEventListener('input', (e) => {
+                particleCount = parseInt(e.target.value);
+                rebuildScene();
+            });
+            document.getElementById('speedSlider').addEventListener('input', (e) => {
+                textSpeed = parseInt(e.target.value);
+            });
+
+            canvas.addEventListener('mousedown', e => { isDragging = true; lastMouseX = e.clientX; });
+            window.addEventListener('mousemove', e => {
+                if(isDragging) {
+                    const delta = e.clientX - lastMouseX;
+                    targetAngleY += delta * 0.005;
+                    lastMouseX = e.clientX;
+                }
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+            window.addEventListener('wheel', e => {
+                zoom += e.deltaY * -0.001;
+                zoom = Math.max(0.4, Math.min(zoom, 3.0));
+            });
+
+            rebuildScene();
+            animate();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            focalLength = width * 0.9;
+        }
+
+        function updateTextStyle() {
+            const el = document.getElementById('scrolling-text');
+            el.style.fontSize = textSize + "px";
+            document.getElementById('text-container').style.height = (textSize * 1.5) + "px";
+        }
+
+        function updateText() {
+            const input = document.getElementById('msgInput');
+            const txt = input.value;
+            if (txt) {
+                const el = document.getElementById('scrolling-text');
+                el.innerText = txt;
+                const lowerTxt = txt.toLowerCase();
+
+                if (txt.includes(TARGET_NAME)) triggerSpecialPhotos();
+                if (lowerTxt.includes('love') || lowerTxt.includes('爱')) heartSpawnEndTime = Date.now() + 3000;
+                if (lowerTxt.includes('miss') || lowerTxt.includes('想你')) starSpawnEndTime = Date.now() + 2200;
+            }
+        }
+
+        function triggerSpecialPhotos() {
+            if (loadedImages.length === 0) {
+                // 如果图片列表没填，或者没加载完
+                if (photoList.length === 0) {
+                    alert("请在代码的 photoList 中添加照片路径！");
+                } else {
+                    alert("照片正在加载中...请稍后再试");
+                }
+                return;
+            }
+            // 批量生成
+            for (let i = 0; i < 40; i++) {
+                // 随机取图
+                const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
+                if (activePhotoParticles.length >= MAX_PHOTOS) {
+                    activePhotoParticles.shift();
+                }
+                activePhotoParticles.push(new StraightPhotoParticle(img));
+            }
+        }
+
+        // === 粒子定义 ===
+
+        // 1. 照片粒子 (笔直上升)
+        class StraightPhotoParticle {
+            constructor(img) {
+                this.img = img;
+                this.x = Math.random() * (width - 150);
+                this.y = height + Math.random() * 800;
+                // 限制显示宽度
+                const displayWidth = 100 + Math.random() * 50;
+                const scale = displayWidth / img.width;
+                this.w = img.width * scale;
+                this.h = img.height * scale;
+                this.speed = 3 + Math.random() * 3;
+                this.opacity = 1;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < -this.h - 50) this.opacity = 0;
+            }
+            draw(ctx) {
+                if (this.opacity <= 0) return;
+                ctx.globalAlpha = this.opacity;
+                // 绘制图片
+                ctx.drawImage(this.img, this.x, this.y, this.w, this.h);
+                // 简单描边
+                ctx.strokeStyle = "rgba(255,255,255,0.8)";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.w, this.h);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // 2. 爱心
+        class Heart {
+            constructor() {
+                this.x = Math.random() * width; this.y = height + Math.random() * 100;
+                this.size = 10 + Math.random() * 20; this.speed = 5 + Math.random() * 8;
+                this.wobble = Math.random() * Math.PI * 2; this.wobbleSpeed = 0.05 + Math.random() * 0.05;
+                const colors = ['#ff0000', '#ff1493', '#ff69b4', '#ff4040'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.opacity = 1;
+            }
+            update() {
+                this.y -= this.speed; this.wobble += this.wobbleSpeed;
+                this.x += Math.sin(this.wobble) * 2;
+                if (this.y < height * 0.2) this.opacity -= 0.02;
+            }
+            draw(ctx) {
+                if (this.opacity <= 0) return;
+                ctx.globalAlpha = this.opacity; ctx.fillStyle = this.color;
+                const x = this.x, y = this.y, s = this.size / 30;
+                ctx.beginPath(); ctx.moveTo(x, y);
+                ctx.bezierCurveTo(x, y - 3*s, x - 5*s, y - 15*s, x - 25*s, y - 15*s);
+                ctx.bezierCurveTo(x - 55*s, y - 15*s, x - 55*s, y + 22.5*s, x - 55*s, y + 22.5*s);
+                ctx.bezierCurveTo(x - 55*s, y + 40*s, x - 35*s, y + 62*s, x, y + 80*s);
+                ctx.bezierCurveTo(x + 35*s, y + 62*s, x + 55*s, y + 40*s, x + 55*s, y + 22.5*s);
+                ctx.bezierCurveTo(x + 55*s, y + 22.5*s, x + 55*s, y - 15*s, x + 25*s, y - 15*s);
+                ctx.bezierCurveTo(x + 10*s, y - 15*s, x, y - 3*s, x, y);
+                ctx.fill(); ctx.globalAlpha = 1;
+            }
+        }
+
+        // 3. 黄色十字星
+        class YellowStar {
+            constructor() {
+                if (Math.random() > 0.5) { this.x = Math.random() * width * 1.5 - (width * 0.5); this.y = -20; }
+                else { this.x = -20; this.y = Math.random() * height * 0.8; }
+                this.size = 2 + Math.random() * 3;
+                const speedBase = 8 + Math.random() * 12;
+                this.vx = speedBase; this.vy = speedBase * 0.8;
+                const colors = ['#ffd700', '#ffff00', '#ffec8b', '#fffacd'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.opacity = 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.y > height + 20 || this.x > width + 20) this.opacity = 0;
+            }
+            draw(ctx) {
+                if (this.opacity <= 0) return;
+                ctx.globalAlpha = this.opacity; ctx.strokeStyle = this.color;
+                ctx.lineWidth = 1.5; ctx.lineCap = "round";
+                const x = this.x, y = this.y, s = this.size;
+                ctx.beginPath(); ctx.moveTo(x, y - s); ctx.lineTo(x, y + s);
+                ctx.moveTo(x - s, y); ctx.lineTo(x + s, y); ctx.stroke(); ctx.globalAlpha = 1;
+            }
+        }
+
+        // 4. 树粒子
+        class Point {
+            constructor(x,y,z,c,s,t) {
+                this.x=x; this.y=y; this.z=z; this.c=c; this.s=s; this.t=t;
+                this.off=Math.random()*100;
+            }
+            draw(ctx, sx, sy, scale, time) {
+                let size = this.s * scale * zoom;
+                if (this.t === 'halo') {
+                    const b = 1 + Math.sin(time*0.003)*0.2; size *= b;
+                    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, size);
+                    g.addColorStop(0, 'rgba(255,255,200,0.4)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, size, 0, Math.PI*2); ctx.fill(); return;
+                }
+                if (this.t === 'light') {
+                    const a = 0.5 + 0.5 * Math.sin(time*0.005 + this.off); if (a<0.1) return;
+                    ctx.globalAlpha = a; ctx.shadowBlur = 10*zoom; ctx.shadowColor = this.c;
+                } else if (this.t === 'ribbon') {
+                    size *= (0.8 + 0.2*Math.sin(time*0.005 + this.off)); ctx.globalAlpha = 0.9;
+                } else if (this.t === 'starP') {
+                    ctx.globalAlpha = 0.9; ctx.fillStyle = Math.random()>0.95?'#fff':this.c;
+                } else {
+                    ctx.globalAlpha = 1.0; ctx.fillStyle=this.c;
+                }
+                if(this.t !== 'starP') ctx.fillStyle = this.c;
+                ctx.beginPath(); ctx.arc(sx, sy, size, 0, Math.PI*2); ctx.fill();
+                ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
+            }
+        }
+
+        function rebuildScene() {
+            particles = [];
+            const treeTop = -180; const treeHeight = 360;
+            for (let i = 0; i < particleCount; i++) {
+                const h = treeTop + Math.random() * treeHeight;
+                const maxR = (h - treeTop) / treeHeight * 140;
+                const angle = Math.random() * Math.PI * 2;
+                let rRatio = Math.random() > 0.2 ? 0.8 + Math.random() * 0.2 : Math.random();
+                const r = maxR * rRatio;
+                const x = Math.cos(angle) * r; const z = Math.sin(angle) * r;
+                const cVal = Math.floor(50 + Math.random() * 100);
+                particles.push(new Point(x, h, z, `rgb(0, ${cVal}, 40)`, 1.8, 'tree'));
+            }
+            for (let i = 0; i < 400; i++) {
+                const t = i / 400; const h = treeTop + t * treeHeight;
+                const maxR = (h - treeTop) / treeHeight * 140;
+                const r = maxR + 5 + Math.sin(t * 35) * 4;
+                const angle = t * Math.PI * 18;
+                const x = Math.cos(angle) * r; const z = Math.sin(angle) * r;
+                particles.push(new Point(x, h, z, '#ffd700', 2.5, 'ribbon'));
+            }
+            const cols = ['#ff0000', '#ffff00', '#00ccff', '#ff00ff'];
+            for (let i = 0; i < 150; i++) {
+                const h = treeTop + Math.random() * treeHeight;
+                const r = ((h - treeTop) / treeHeight * 140) + 3;
+                const angle = Math.random() * Math.PI * 2;
+                const x = Math.cos(angle) * r; const z = Math.sin(angle) * r;
+                particles.push(new Point(x, h, z, cols[Math.floor(Math.random()*4)], 3.8, 'light'));
+            }
+            createParticleStar(0, treeTop - 8, 0, 20);
+        }
+
+        function createParticleStar(cx, cy, cz, R) {
+            particles.push(new Point(cx, cy, cz, 'rgba(255,255,200,0)', 60, 'halo'));
+            for(let i=0; i<200; i++) {
+                const arm = Math.floor(Math.random() * 5);
+                const aOut = (arm * 72 - 18) * Math.PI/180;
+                const side = Math.random() > 0.5 ? -1 : 1;
+                const aIn = ((arm * 72 - 18) + side * 36) * Math.PI/180;
+                const p2 = {x: Math.cos(aOut)*R, y: Math.sin(aOut)*R};
+                const p3 = {x: Math.cos(aIn)*(R*0.4), y: Math.sin(aIn)*(R*0.4)};
+                const sq=Math.sqrt(Math.random()); const r2=Math.random();
+                const lx = (1-sq)*0 + sq*(1-r2)*p2.x + sq*r2*p3.x;
+                const ly = (1-sq)*0 + sq*(1-r2)*p2.y + sq*r2*p3.y;
+                const col = (lx*lx+ly*ly < R*R*0.1) ? '#fff' : '#ffd700';
+                particles.push(new Point(cx+lx, cy+ly, cz+(Math.random()-0.5)*4, col, 2.0, 'starP'));
+            }
+        }
+
+        function animate() {
+            const time = Date.now();
+            ctx.clearRect(0, 0, width, height);
+
+            angleY += (targetAngleY - angleY) * 0.1;
+            targetAngleY += 0.002;
+            const cx = width / 2; const cy = height / 2;
+            const renderList = [];
+
+            // 1. 树
+            particles.forEach(p => {
+                const cos = Math.cos(angleY), sin = Math.sin(angleY);
+                let rx = p.x * cos - p.z * sin;
+                let rz = p.x * sin + p.z * cos;
+                const depth = rz + focalLength;
+                if (depth > 0) {
+                    const scale = focalLength / depth;
+                    const x2d = rx * scale * zoom + cx;
+                    const y2d = p.y * scale * zoom + cy;
+                    let d = depth; if(p.t === 'halo') d += 50;
+                    renderList.push({ p:p, x:x2d, y:y2d, s:scale, d:d });
+                }
+            });
+            renderList.sort((a,b) => b.d - a.d);
+            renderList.forEach(item => item.p.draw(ctx, item.x, item.y, item.s, time));
+
+            // 2. 彩蛋
+            if (time < heartSpawnEndTime) { for(let k=0; k<2; k++) hearts.push(new Heart()); }
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                const h = hearts[i]; h.update(); h.draw(ctx);
+                if (h.y < -100 || h.opacity <= 0) hearts.splice(i, 1);
+            }
+
+            if (time < starSpawnEndTime) { for(let k=0; k<6; k++) yellowStars.push(new YellowStar()); }
+            for (let i = yellowStars.length - 1; i >= 0; i--) {
+                const s = yellowStars[i]; s.update(); s.draw(ctx);
+                if (s.opacity <= 0) yellowStars.splice(i, 1);
+            }
+
+            // 3. 专属相册
+            for (let i = activePhotoParticles.length - 1; i >= 0; i--) {
+                const p = activePhotoParticles[i];
+                p.update(); p.draw(ctx);
+                if (p.opacity <= 0) activePhotoParticles.splice(i, 1);
+            }
+
+            const el = document.getElementById('scrolling-text');
+            const elWidth = el.offsetWidth;
+            textX -= textSpeed;
+            if (textX < -elWidth) textX = width;
+            el.style.transform = `translateX(${textX}px)`;
+
+            requestAnimationFrame(animate);
+        }
+
+        init();
+    </script>
+</body>
+</html>
