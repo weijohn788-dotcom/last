@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
@@ -6,150 +6,88 @@
     <title>Merry Christmas</title>
     <style>
         body {
-            margin: 0;
-            overflow: hidden;
+            margin: 0; overflow: hidden;
             background: radial-gradient(circle at center, #1a1e29 0%, #000000 100%);
             font-family: 'Segoe UI', sans-serif;
             color: white;
         }
+        
+        /* 错误提示框 (平时隐藏) */
+        #error-console {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 9999; color: red;
+            padding: 20px; font-family: monospace; display: none;
+            overflow: auto; white-space: pre-wrap;
+        }
 
         /* UI 面板 */
         #ui-panel {
-            position: absolute;
-            top: 15px;
-            left: 15px;
+            position: absolute; top: 15px; left: 15px;
             background: rgba(30, 30, 30, 0.95);
             backdrop-filter: blur(5px);
-            padding: 15px;
-            border-radius: 10px;
+            padding: 15px; border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.15);
-            z-index: 100;
-            width: 260px;
+            z-index: 100; width: 260px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
             transition: opacity 0.3s;
         }
-
+        
         #toggle-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+            position: absolute; top: 15px; right: 15px;
             background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            z-index: 101;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: white; border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%; width: 40px; height: 40px;
+            cursor: pointer; z-index: 101;
+            font-size: 20px; display: flex; align-items: center; justify-content: center;
         }
 
-            #toggle-btn:hover {
-                background: rgba(255, 255, 255, 0.3);
-            }
-
-        .control-group {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            font-size: 12px;
-            color: #bbb;
-            margin-bottom: 4px;
-        }
-
-        input[type=range] {
-            width: 100%;
-            cursor: pointer;
-            accent-color: #ff3333;
-            height: 4px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 5px;
-        }
-
+        .control-group { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; color: #bbb; margin-bottom: 4px; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #ff3333; height: 4px; }
+        
+        .input-row { display: flex; gap: 5px; }
         input[type=text] {
-            flex: 1;
-            padding: 6px;
-            border-radius: 4px;
-            border: none;
-            outline: none;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-size: 13px;
+            flex: 1; padding: 6px; border-radius: 4px; border: none; outline: none;
+            background: rgba(255,255,255,0.1); color: white; font-size: 13px;
         }
-
         button.action-btn {
-            padding: 6px 12px;
-            background: #cc0000;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-            white-space: nowrap;
+            padding: 6px 12px; background: #cc0000;
+            color: white; border: none; border-radius: 4px; cursor: pointer;
+            font-weight: bold; font-size: 12px; white-space: nowrap;
         }
-
-            button.action-btn:hover {
-                background: #ff0000;
-            }
-
+        
         #loading-msg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #00ff00;
-            font-size: 14px;
-            pointer-events: none;
-            display: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #00ff00; font-size: 14px; pointer-events: none; text-align: center;
         }
 
         #text-container {
-            position: absolute;
-            bottom: 10%;
-            left: 0;
-            width: 100%;
-            height: 120px;
-            overflow: hidden;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
+            position: absolute; bottom: 10%; left: 0; width: 100%; height: 120px;
+            overflow: hidden; pointer-events: none; display: flex; align-items: center;
         }
-
         #scrolling-text {
-            white-space: nowrap;
-            font-weight: bold;
-            color: #ff2222;
+            white-space: nowrap; font-weight: bold; color: #ff2222;
             text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 20px #ff0000;
             font-family: 'Times New Roman', serif;
-            position: absolute;
-            will-change: transform;
+            position: absolute; will-change: transform;
         }
-
         #egg-hint {
-            position: absolute;
-            bottom: 5px;
-            right: 10px;
-            font-size: 12px;
-            color: #666;
-            pointer-events: none;
-            text-align: right;
-            line-height: 1.5;
+            position: absolute; bottom: 5px; right: 10px; 
+            font-size: 12px; color: #666; pointer-events: none; text-align: right; line-height: 1.5;
         }
     </style>
 </head>
 <body>
 
+    <!-- 错误显示区域 -->
+    <div id="error-console">
+        <h3>⚠️ 程序崩溃了</h3>
+        <p>请截图发给开发者：</p>
+        <div id="error-content"></div>
+    </div>
+
     <button id="toggle-btn" title="隐藏/显示控制台">👁️</button>
-    <div id="loading-msg">正在加载专属惊喜...</div>
+    <div id="loading-msg">正在初始化...</div>
 
     <div id="ui-panel">
         <div style="font-size: 15px; font-weight: bold; margin-bottom: 15px; color: #ff3333; border-bottom:1px solid #555; padding-bottom:5px;">
@@ -176,7 +114,7 @@
     <div id="text-container">
         <div id="scrolling-text">MERRY CHRISTMAS</div>
     </div>
-
+    
     <div id="egg-hint">
         "love"/"爱" -> 爱心雨<br>
         "miss"/"想你" -> 星雨<br>
@@ -186,47 +124,31 @@
     <canvas id="canvas"></canvas>
 
     <script>
-        // ==========================================
-        //  【重要】配置区域：请在这里修改
-        // ==========================================
+        // === 全局错误捕获 (帮你定位问题) ===
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorDiv = document.getElementById('error-console');
+            const content = document.getElementById('error-content');
+            errorDiv.style.display = 'block';
+            content.innerText = `错误信息: ${message}\n行号: ${lineno}\n列号: ${colno}`;
+            return false;
+        };
 
-        const TARGET_NAME = "魏名扬"; // 触发名字
+        // ==========================================
+        //  配置区域 (请修改这里)
+        // ==========================================
+        
+        const TARGET_NAME = "魏名扬"; 
 
-        // 请把你在 photos 文件夹里的照片名字填在这里
-        // 格式："photos/文件名.jpg"
+        // ⚠️ 注意：数组的格式必须严格正确！
+        // 每一行都要用双引号包起来，行尾加逗号
         const photoList = [
-            "18s/1.png",
-            "18s/2.jpg",
-            "18s/3.jpg",
-            "18s/4.jpg",
-            "18s/6.jpg",
-            "18s/7.jpg",
-            "18s/8.jpg",
-            "18s/9.jpg",
-            "18s/10.jpg",
-            "18s/11.jpg",
-            "18s/12.jpg",
-            "18s/13.jpg",
-            "18s/14.jpg",
-            "18s/15.jpg",
-            "18s/16.jpg",
-            "18s/17.jpg",
-            "18s/18.jpg",
-            "18s/19.jpg",
-            "18s/21.jpg",
-            "18s/22.jpg",
-            "18s/IMG_20240213_135912.jpg",
-            "18s/IMG_20240521_154317.jpg",
-            "18s/IMG_20241222_213848.jpg",
-            "18s/IMG_20241222_213957.jpg",
-            "18s/IMG_20250101_121453.jpg",
-            "18s/IMG_20250101_123726.jpg",
-            // 如果你有更多，按格式继续加...
-            // "photos/4.jpg",
-            // "photos/5.png"
+            "photos/1.jpg",
+            "photos/2.jpg",
+            "photos/3.jpg"
+            // 如果只有一张图，就写一行。不要留空的逗号在最后。
         ];
-
-        const MAX_PHOTOS = 99; // 同屏最大照片数
+        
+        const MAX_PHOTOS = 88; 
         // ==========================================
 
         const canvas = document.getElementById('canvas');
@@ -239,13 +161,13 @@
         let focalLength = 500;
         let zoom = 1.0;
         let particleCount = 2000;
-        let particles = [];
-
+        let particles = []; 
+        
         // 资源与粒子
-        let loadedImages = []; // 预加载后的图片对象
-        let activePhotoParticles = [];
-        let hearts = [];
-        let yellowStars = [];
+        let loadedImages = []; 
+        let activePhotoParticles = []; 
+        let hearts = []; 
+        let yellowStars = []; 
 
         let heartSpawnEndTime = 0;
         let starSpawnEndTime = 0;
@@ -253,21 +175,19 @@
         let targetAngleY = 0;
         let isDragging = false;
         let lastMouseX = 0;
-        let textX = 0; let textSpeed = 2; let textSize = 60;
+        let textX = 0; let textSpeed = 2; let textSize = 60; 
         let isUIVisible = true;
 
-        // 预加载所有图片
-        // 替换原本的 preloadPhotos 函数
+        // 预加载照片 (带容错逻辑)
         function preloadPhotos() {
-            const statusEl = document.getElementById('loading-msg');
-            statusEl.style.display = 'block';
-            statusEl.style.color = 'yellow';
-            
+            if (!photoList || photoList.length === 0) {
+                loadingMsg.style.display = 'none';
+                return;
+            }
+
+            loadingMsg.style.display = 'block';
             let loadedCount = 0;
             let errorCount = 0;
-            
-            // 调试信息：显示总共配置了多少张
-            console.log(`代码配置了 ${photoList.length} 张照片`);
 
             photoList.forEach(src => {
                 const img = new Image();
@@ -276,31 +196,24 @@
                 img.onload = () => {
                     loadedImages.push(img);
                     loadedCount++;
-                    // 实时更新屏幕文字
-                    statusEl.innerText = `正在加载: ${loadedCount}/${photoList.length} (失败: ${errorCount})`;
-                    
-                    if (loadedCount + errorCount === photoList.length) {
-                        setTimeout(() => {
-                            statusEl.innerText = `加载完成！成功 ${loadedCount} 张，失败 ${errorCount} 张`;
-                            statusEl.style.color = '#00ff00';
-                            // 3秒后隐藏提示
-                            setTimeout(() => statusEl.style.display = 'none', 3000);
-                        }, 500);
-                    }
+                    checkLoadComplete();
                 };
                 
                 img.onerror = () => {
                     errorCount++;
-                    console.error("加载失败 (请检查文件名大小写): " + src);
-                    statusEl.innerText = `正在加载: ${loadedCount}/${photoList.length} (失败: ${errorCount})`;
-                    
-                    if (loadedCount + errorCount === photoList.length) {
-                        statusEl.innerText = `加载结束。⚠️ 失败 ${errorCount} 张，请检查文件名！`;
-                        statusEl.style.color = '#ff0000';
-                    }
-                }
+                    console.error("照片加载失败: " + src);
+                    checkLoadComplete();
+                };
             });
-        }
+
+            function checkLoadComplete() {
+                loadingMsg.innerText = `加载照片: ${loadedCount}/${photoList.length} (失败${errorCount})`;
+                if (loadedCount + errorCount === photoList.length) {
+                    setTimeout(() => {
+                        loadingMsg.style.display = 'none';
+                    }, 2000);
+                }
+            }
         }
 
         toggleBtn.addEventListener('click', () => {
@@ -315,7 +228,13 @@
             window.addEventListener('resize', resize);
             textX = window.innerWidth;
             updateTextStyle();
-            preloadPhotos(); // 启动时预加载图片
+            
+            // 安全调用预加载
+            try {
+                preloadPhotos(); 
+            } catch(e) {
+                console.error("预加载出错", e);
+            }
 
             document.getElementById('particleSlider').addEventListener('input', (e) => {
                 particleCount = parseInt(e.target.value);
@@ -334,6 +253,17 @@
                 }
             });
             window.addEventListener('mouseup', () => isDragging = false);
+            // 触摸支持 (简单适配手机)
+            canvas.addEventListener('touchstart', e => { isDragging = true; lastMouseX = e.touches[0].clientX; });
+            canvas.addEventListener('touchmove', e => {
+                if(isDragging) {
+                    const delta = e.touches[0].clientX - lastMouseX;
+                    targetAngleY += delta * 0.005;
+                    lastMouseX = e.touches[0].clientX;
+                }
+            });
+            canvas.addEventListener('touchend', () => isDragging = false);
+
             window.addEventListener('wheel', e => {
                 zoom += e.deltaY * -0.001;
                 zoom = Math.max(0.4, Math.min(zoom, 3.0));
@@ -371,51 +301,45 @@
 
         function triggerSpecialPhotos() {
             if (loadedImages.length === 0) {
-                // 如果图片列表没填，或者没加载完
-                if (photoList.length === 0) {
-                    alert("请在代码的 photoList 中添加照片路径！");
+                if (photoList.length > 0) {
+                    alert("照片加载失败或尚未完成，请检查文件名！");
                 } else {
-                    alert("照片正在加载中...请稍后再试");
+                    alert("您还没有在代码里配置 photoList 照片列表！");
                 }
                 return;
             }
             // 批量生成
             for (let i = 0; i < 40; i++) {
-                // 随机取图
                 const img = loadedImages[Math.floor(Math.random() * loadedImages.length)];
                 if (activePhotoParticles.length >= MAX_PHOTOS) {
-                    activePhotoParticles.shift();
+                    activePhotoParticles.shift(); 
                 }
                 activePhotoParticles.push(new StraightPhotoParticle(img));
             }
         }
 
-        // === 粒子定义 ===
+        // === 粒子类定义 ===
 
-        // 1. 照片粒子 (笔直上升)
         class StraightPhotoParticle {
             constructor(img) {
                 this.img = img;
-                this.x = Math.random() * (width - 150);
-                this.y = height + Math.random() * 800;
-                // 限制显示宽度
-                const displayWidth = 100 + Math.random() * 50;
+                this.x = Math.random() * (width - 150); 
+                this.y = height + Math.random() * 800; 
+                const displayWidth = 100 + Math.random() * 50; 
                 const scale = displayWidth / img.width;
                 this.w = img.width * scale;
                 this.h = img.height * scale;
-                this.speed = 3 + Math.random() * 3;
+                this.speed = 3 + Math.random() * 3; 
                 this.opacity = 1;
             }
             update() {
-                this.y -= this.speed;
-                if (this.y < -this.h - 50) this.opacity = 0;
+                this.y -= this.speed; 
+                if (this.y < -this.h - 50) this.opacity = 0; 
             }
             draw(ctx) {
                 if (this.opacity <= 0) return;
                 ctx.globalAlpha = this.opacity;
-                // 绘制图片
                 ctx.drawImage(this.img, this.x, this.y, this.w, this.h);
-                // 简单描边
                 ctx.strokeStyle = "rgba(255,255,255,0.8)";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(this.x, this.y, this.w, this.h);
@@ -423,7 +347,6 @@
             }
         }
 
-        // 2. 爱心
         class Heart {
             constructor() {
                 this.x = Math.random() * width; this.y = height + Math.random() * 100;
@@ -453,12 +376,11 @@
             }
         }
 
-        // 3. 黄色十字星
         class YellowStar {
             constructor() {
-                if (Math.random() > 0.5) { this.x = Math.random() * width * 1.5 - (width * 0.5); this.y = -20; }
+                if (Math.random() > 0.5) { this.x = Math.random() * width * 1.5 - (width * 0.5); this.y = -20; } 
                 else { this.x = -20; this.y = Math.random() * height * 0.8; }
-                this.size = 2 + Math.random() * 3;
+                this.size = 2 + Math.random() * 3; 
                 const speedBase = 8 + Math.random() * 12;
                 this.vx = speedBase; this.vy = speedBase * 0.8;
                 const colors = ['#ffd700', '#ffff00', '#ffec8b', '#fffacd'];
@@ -472,14 +394,13 @@
             draw(ctx) {
                 if (this.opacity <= 0) return;
                 ctx.globalAlpha = this.opacity; ctx.strokeStyle = this.color;
-                ctx.lineWidth = 1.5; ctx.lineCap = "round";
+                ctx.lineWidth = 1.5; ctx.lineCap = "round"; 
                 const x = this.x, y = this.y, s = this.size;
                 ctx.beginPath(); ctx.moveTo(x, y - s); ctx.lineTo(x, y + s);
                 ctx.moveTo(x - s, y); ctx.lineTo(x + s, y); ctx.stroke(); ctx.globalAlpha = 1;
             }
         }
 
-        // 4. 树粒子
         class Point {
             constructor(x,y,z,c,s,t) {
                 this.x=x; this.y=y; this.z=z; this.c=c; this.s=s; this.t=t;
@@ -567,7 +488,6 @@
             const cx = width / 2; const cy = height / 2;
             const renderList = [];
 
-            // 1. 树
             particles.forEach(p => {
                 const cos = Math.cos(angleY), sin = Math.sin(angleY);
                 let rx = p.x * cos - p.z * sin;
@@ -584,7 +504,6 @@
             renderList.sort((a,b) => b.d - a.d);
             renderList.forEach(item => item.p.draw(ctx, item.x, item.y, item.s, time));
 
-            // 2. 彩蛋
             if (time < heartSpawnEndTime) { for(let k=0; k<2; k++) hearts.push(new Heart()); }
             for (let i = hearts.length - 1; i >= 0; i--) {
                 const h = hearts[i]; h.update(); h.draw(ctx);
@@ -597,7 +516,6 @@
                 if (s.opacity <= 0) yellowStars.splice(i, 1);
             }
 
-            // 3. 专属相册
             for (let i = activePhotoParticles.length - 1; i >= 0; i--) {
                 const p = activePhotoParticles[i];
                 p.update(); p.draw(ctx);
@@ -613,8 +531,14 @@
             requestAnimationFrame(animate);
         }
 
-        init();
+        // 安全启动
+        try {
+            init();
+        } catch(e) {
+            console.error("启动失败", e);
+            document.getElementById('error-console').style.display = 'block';
+            document.getElementById('error-content').innerText = e.toString();
+        }
     </script>
 </body>
-
 </html>
